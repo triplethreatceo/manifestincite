@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-const PUBLIC_ROUTES = ['/login', '/signup', '/forgot-password', '/reset-password'];
+const PUBLIC_ROUTES = ['/', '/login', '/signup', '/forgot-password', '/reset-password', '/privacy', '/terms'];
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -32,7 +32,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
-  const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
+  const isPublicRoute = pathname === '/' || PUBLIC_ROUTES.some((route) => route !== '/' && pathname.startsWith(route));
 
   // Not logged in + trying to access protected route → redirect to login
   if (!user && !isPublicRoute) {
@@ -41,8 +41,9 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Logged in + on a public auth route → redirect to dashboard
-  if (user && isPublicRoute) {
+  // Logged in + on a public auth route (not marketing pages) → redirect to dashboard
+  const isAuthRoute = ['/login', '/signup', '/forgot-password', '/reset-password'].some((r) => pathname.startsWith(r));
+  if (user && isAuthRoute) {
     const url = request.nextUrl.clone();
 
     // Fetch user role to determine redirect target
