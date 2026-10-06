@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, Edit, AlertTriangle, FileText, Shield, Pill } from 'lucide-react';
+import { ArrowLeft, Edit, AlertTriangle, FileText, Shield, Pill, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { format, differenceInDays } from 'date-fns';
 import type { AppRole } from '@/lib/types/auth';
 
@@ -39,6 +40,18 @@ interface Props {
 export function DriverDetail({ driver, documents, alerts, drugRecords, clearinghouseRecords, userRole }: Props) {
   const router = useRouter();
 
+  async function handleDelete() {
+    if (!confirm(`Delete driver "${driver.full_name}"? This cannot be undone.`)) return;
+    const res = await fetch(`/api/drivers/${driver.id}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const data = await res.json();
+      toast.error(data.error ?? 'Failed to delete driver');
+      return;
+    }
+    toast.success('Driver deleted');
+    router.push('/drivers');
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -58,11 +71,18 @@ export function DriverDetail({ driver, documents, alerts, drugRecords, clearingh
           </div>
         </div>
         {userRole !== 'client' && (
-          <Link href={`/drivers/${driver.id}/edit`}>
-            <Button variant="outline" size="sm">
-              <Edit className="h-4 w-4 mr-2" />Edit
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href={`/drivers/${driver.id}/edit`}>
+              <Button variant="outline" size="sm">
+                <Edit className="h-4 w-4 mr-2" />Edit
+              </Button>
+            </Link>
+            {userRole === 'admin' && (
+              <Button variant="outline" size="sm" onClick={handleDelete} className="text-destructive hover:text-destructive">
+                <Trash2 className="h-4 w-4 mr-2" />Delete
+              </Button>
+            )}
+          </div>
         )}
       </div>
 

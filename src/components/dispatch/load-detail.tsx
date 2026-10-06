@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, MapPin, Truck, FileText, MessageSquare, Clock, Send } from 'lucide-react';
+import { ArrowLeft, MapPin, Truck, FileText, MessageSquare, Clock, Send, Edit, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -67,6 +67,18 @@ export function LoadDetail({ load, statusUpdates, documents, messages, userId, u
 
   const currentIdx = statusFlow.indexOf(load.status);
   const nextStatus = currentIdx >= 0 && currentIdx < statusFlow.length - 1 ? statusFlow[currentIdx + 1] : null;
+
+  async function handleDelete() {
+    if (!confirm(`Delete load "${load.load_number}"? This cannot be undone.`)) return;
+    const res = await fetch(`/api/dispatch/loads/${load.id}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const data = await res.json();
+      toast.error(data.error ?? 'Failed to delete load');
+      return;
+    }
+    toast.success('Load deleted');
+    router.push('/dispatch/loads');
+  }
 
   async function advanceStatus() {
     if (!nextStatus) return;
@@ -127,11 +139,23 @@ export function LoadDetail({ load, statusUpdates, documents, messages, userId, u
             </div>
           </div>
         </div>
-        {nextStatus && load.status !== 'cancelled' && (
-          <Button onClick={advanceStatus} disabled={updating} className="bg-[#C41E3A] hover:bg-[#A51830] text-white">
-            {updating ? 'Updating...' : `→ ${formatStatus(nextStatus)}`}
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <Link href={`/dispatch/loads/${load.id}/edit`}>
+            <Button variant="outline" size="sm">
+              <Edit className="h-4 w-4 mr-2" />Edit
+            </Button>
+          </Link>
+          {isAdmin && (
+            <Button variant="outline" size="sm" onClick={handleDelete} className="text-destructive hover:text-destructive">
+              <Trash2 className="h-4 w-4 mr-2" />Delete
+            </Button>
+          )}
+          {nextStatus && load.status !== 'cancelled' && (
+            <Button onClick={advanceStatus} disabled={updating} className="bg-[#C41E3A] hover:bg-[#A51830] text-white">
+              {updating ? 'Updating...' : `→ ${formatStatus(nextStatus)}`}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Status Pipeline */}

@@ -10,8 +10,9 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  ArrowLeft, Edit, Users, Truck, FileText, AlertTriangle, Receipt,
+  ArrowLeft, Edit, Users, Truck, FileText, AlertTriangle, Receipt, Trash2,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { format } from 'date-fns';
 import type { AppRole } from '@/lib/types/auth';
 import type { DbClient, DbDriver, DbVehicle, DbAlert, DbInvoice, DbDocument } from '@/lib/types/database';
@@ -43,6 +44,18 @@ interface Props {
 export function ClientDetail({ client, drivers, vehicles, alerts, invoices, documents, userRole }: Props) {
   const router = useRouter();
 
+  async function handleDelete() {
+    if (!confirm(`Delete "${client.company_legal_name}"? This cannot be undone.`)) return;
+    const res = await fetch(`/api/clients/${client.id}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const data = await res.json();
+      toast.error(data.error ?? 'Failed to delete client');
+      return;
+    }
+    toast.success('Client deleted');
+    router.push('/clients');
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -67,12 +80,18 @@ export function ClientDetail({ client, drivers, vehicles, alerts, invoices, docu
           </div>
         </div>
         {userRole === 'admin' && (
-          <Link href={`/clients/${client.id}/edit`}>
-            <Button variant="outline" size="sm">
-              <Edit className="h-4 w-4 mr-2" />
-              Edit
+          <div className="flex items-center gap-2">
+            <Link href={`/clients/${client.id}/edit`}>
+              <Button variant="outline" size="sm">
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+            </Link>
+            <Button variant="outline" size="sm" onClick={handleDelete} className="text-destructive hover:text-destructive">
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
             </Button>
-          </Link>
+          </div>
         )}
       </div>
 
