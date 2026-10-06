@@ -27,7 +27,9 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     admin.from('drivers').select('*').eq('client_id', id).order('full_name'),
     admin.from('vehicles').select('*').eq('client_id', id).order('unit_number'),
     admin.from('alerts').select('*').eq('client_id', id).in('status', ['open', 'in_progress']).order('severity', { ascending: false }).limit(10),
-    admin.from('invoices').select('*').eq('client_id', id).order('invoice_date', { ascending: false }).limit(10),
+    user.role === 'admin'
+      ? admin.from('invoices').select('*').eq('client_id', id).order('invoice_date', { ascending: false }).limit(10)
+      : Promise.resolve({ data: [] as any[] }),
     admin.from('documents').select('*, users!documents_uploaded_by_fkey(full_name)').eq('client_id', id).order('created_at', { ascending: false }).limit(20),
   ]);
 

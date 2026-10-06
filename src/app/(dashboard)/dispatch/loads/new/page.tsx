@@ -26,6 +26,7 @@ export default async function NewLoadPage() {
         drivers={drivers ?? []}
         vehicles={vehicles ?? []}
         userId={user.id}
+        userRole={user.role}
       />
     </div>
   );

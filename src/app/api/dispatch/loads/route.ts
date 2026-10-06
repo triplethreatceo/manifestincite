@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAuthUser } from '@/lib/supabase/get-auth-user';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { stripFinancialFields } from '@/lib/financial-fields';
 
 export async function GET() {
   const user = await getAuthUser();
@@ -13,7 +14,9 @@ export async function GET() {
     .order('pickup_date', { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  return NextResponse.json(data);
+
+  const result = user.role === 'admin' ? data : stripFinancialFields(data ?? []);
+  return NextResponse.json(result);
 }
 
 export async function POST(request: Request) {

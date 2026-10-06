@@ -124,7 +124,7 @@ export function ClientDetail({ client, drivers, vehicles, alerts, invoices, docu
           <TabsTrigger value="vehicles">Vehicles ({vehicles.length})</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="alerts">Alerts</TabsTrigger>
-          <TabsTrigger value="invoices">Invoices</TabsTrigger>
+          {userRole === 'admin' && <TabsTrigger value="invoices">Invoices</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="overview">
@@ -146,7 +146,7 @@ export function ClientDetail({ client, drivers, vehicles, alerts, invoices, docu
                 {client.contact_person && <InfoRow label="Contact" value={client.contact_person} />}
                 {client.phone && <InfoRow label="Phone" value={client.phone} />}
                 {client.email && <InfoRow label="Email" value={client.email} />}
-                <InfoRow label="Monthly Fee" value={client.monthly_service_fee ? `$${Number(client.monthly_service_fee).toFixed(2)}` : 'Not set'} />
+                {userRole === 'admin' && <InfoRow label="Monthly Fee" value={client.monthly_service_fee ? `$${Number(client.monthly_service_fee).toFixed(2)}` : 'Not set'} />}
                 {client.white_label_partner && <InfoRow label="Partner" value={client.white_label_partner} />}
               </CardContent>
             </Card>
@@ -297,39 +297,41 @@ export function ClientDetail({ client, drivers, vehicles, alerts, invoices, docu
           </Card>
         </TabsContent>
 
-        <TabsContent value="invoices">
-          <Card>
-            <CardContent className="pt-6">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Invoice #</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Due Date</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Balance</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {invoices.map((inv) => (
-                    <TableRow key={inv.id}>
-                      <TableCell className="font-medium">{inv.invoice_number}</TableCell>
-                      <TableCell>{format(new Date(inv.invoice_date), 'MM/dd/yyyy')}</TableCell>
-                      <TableCell>{format(new Date(inv.due_date), 'MM/dd/yyyy')}</TableCell>
-                      <TableCell>${Number(inv.amount).toFixed(2)}</TableCell>
-                      <TableCell>${Number(inv.balance).toFixed(2)}</TableCell>
-                      <TableCell><Badge variant="secondary">{inv.status}</Badge></TableCell>
+        {userRole === 'admin' && (
+          <TabsContent value="invoices">
+            <Card>
+              <CardContent className="pt-6">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Invoice #</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Due Date</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Balance</TableHead>
+                      <TableHead>Status</TableHead>
                     </TableRow>
-                  ))}
-                  {invoices.length === 0 && (
-                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-6">No invoices</TableCell></TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                  </TableHeader>
+                  <TableBody>
+                    {invoices.map((inv) => (
+                      <TableRow key={inv.id}>
+                        <TableCell className="font-medium">{inv.invoice_number}</TableCell>
+                        <TableCell>{format(new Date(inv.invoice_date), 'MM/dd/yyyy')}</TableCell>
+                        <TableCell>{format(new Date(inv.due_date), 'MM/dd/yyyy')}</TableCell>
+                        <TableCell>${Number(inv.amount).toFixed(2)}</TableCell>
+                        <TableCell>${Number(inv.balance).toFixed(2)}</TableCell>
+                        <TableCell><Badge variant="secondary">{inv.status}</Badge></TableCell>
+                      </TableRow>
+                    ))}
+                    {invoices.length === 0 && (
+                      <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-6">No invoices</TableCell></TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

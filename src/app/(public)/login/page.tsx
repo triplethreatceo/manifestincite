@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { LoginForm } from '@/components/auth/login-form';
 import { Shield } from 'lucide-react';
 
@@ -11,7 +12,9 @@ export default function LoginPage() {
         <h1 className="text-2xl font-bold text-white">ManifestIncite</h1>
         <p className="text-sm text-[#D4D8E0]/60">FMCSA/DOT Compliance Portal</p>
       </div>
-      <LoginForm />
+      <Suspense>
+        <LoginForm />
+      </Suspense>
     </div>
   );
 }

@@ -47,15 +47,19 @@ function formatStatus(s: string) {
   return s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+import type { AppRole } from '@/lib/types/auth';
+
 interface Props {
   load: any;
   statusUpdates: any[];
   documents: any[];
   messages: any[];
   userId: string;
+  userRole: AppRole;
 }
 
-export function LoadDetail({ load, statusUpdates, documents, messages, userId }: Props) {
+export function LoadDetail({ load, statusUpdates, documents, messages, userId, userRole }: Props) {
+  const isAdmin = userRole === 'admin';
   const router = useRouter();
   const [updating, setUpdating] = useState(false);
   const [messageText, setMessageText] = useState('');
@@ -182,18 +186,18 @@ export function LoadDetail({ load, statusUpdates, documents, messages, userId }:
         </Card>
         <Card>
           <CardContent className="pt-4 space-y-2 text-sm">
-            <div className="flex items-center gap-2 text-muted-foreground text-xs font-medium"><Truck className="h-3.5 w-3.5" />ASSIGNMENT & FINANCIALS</div>
+            <div className="flex items-center gap-2 text-muted-foreground text-xs font-medium"><Truck className="h-3.5 w-3.5" />{isAdmin ? 'ASSIGNMENT & FINANCIALS' : 'ASSIGNMENT'}</div>
             <InfoRow label="Driver" value={load.drivers?.full_name} />
             <InfoRow label="Vehicle" value={load.vehicles ? `Unit ${load.vehicles.unit_number ?? ''} ${load.vehicles.make ?? ''}`.trim() : null} />
             <InfoRow label="Dispatcher" value={load.users?.full_name} />
             <InfoRow label="Broker" value={load.broker_name} />
             <div className="border-t pt-2 mt-2" />
-            <InfoRow label="Rate" value={load.rate ? `$${Number(load.rate).toFixed(2)}` : null} />
+            {isAdmin && <InfoRow label="Rate" value={load.rate ? `$${Number(load.rate).toFixed(2)}` : null} />}
             <InfoRow label="Miles" value={load.miles?.toString()} />
             <InfoRow label="DH Miles" value={load.deadhead_miles?.toString()} />
-            <InfoRow label="RPM" value={load.rate_per_mile ? `$${Number(load.rate_per_mile).toFixed(2)}` : null} />
-            <InfoRow label="Dispatch Fee" value={load.dispatch_fee_amount ? `$${Number(load.dispatch_fee_amount).toFixed(2)} (${load.dispatch_fee_percent}%)` : null} />
-            <InfoRow label="Driver Pay" value={load.driver_pay ? `$${Number(load.driver_pay).toFixed(2)}` : null} />
+            {isAdmin && <InfoRow label="RPM" value={load.rate_per_mile ? `$${Number(load.rate_per_mile).toFixed(2)}` : null} />}
+            {isAdmin && <InfoRow label="Dispatch Fee" value={load.dispatch_fee_amount ? `$${Number(load.dispatch_fee_amount).toFixed(2)} (${load.dispatch_fee_percent}%)` : null} />}
+            {isAdmin && <InfoRow label="Driver Pay" value={load.driver_pay ? `$${Number(load.driver_pay).toFixed(2)}` : null} />}
           </CardContent>
         </Card>
       </div>

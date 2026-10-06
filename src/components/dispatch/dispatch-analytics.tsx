@@ -7,11 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ArrowLeft, TrendingUp, DollarSign, Truck, MapPin, BarChart3, Package } from 'lucide-react';
 
+import type { AppRole } from '@/lib/types/auth';
+
 interface Props {
   loads: any[];
+  userRole: AppRole;
 }
 
-export function DispatchAnalytics({ loads }: Props) {
+export function DispatchAnalytics({ loads, userRole }: Props) {
+  const isAdmin = userRole === 'admin';
   const delivered = loads.filter((l) => ['delivered', 'completed'].includes(l.status));
   const totalRevenue = delivered.reduce((sum, l) => sum + (Number(l.rate) || 0), 0);
   const totalMiles = delivered.reduce((sum, l) => sum + (l.miles || 0), 0);
@@ -106,35 +110,37 @@ export function DispatchAnalytics({ loads }: Props) {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-        <KPI label="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon={<DollarSign className="h-4 w-4" />} />
+        {isAdmin && <KPI label="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon={<DollarSign className="h-4 w-4" />} />}
         <KPI label="Loads Delivered" value={delivered.length.toString()} icon={<Package className="h-4 w-4" />} />
-        <KPI label="Avg Rate" value={`$${avgRate.toFixed(0)}`} icon={<TrendingUp className="h-4 w-4" />} />
-        <KPI label="Avg RPM" value={`$${avgRPM.toFixed(2)}`} icon={<BarChart3 className="h-4 w-4" />} />
+        {isAdmin && <KPI label="Avg Rate" value={`$${avgRate.toFixed(0)}`} icon={<TrendingUp className="h-4 w-4" />} />}
+        {isAdmin && <KPI label="Avg RPM" value={`$${avgRPM.toFixed(2)}`} icon={<BarChart3 className="h-4 w-4" />} />}
         <KPI label="Total Miles" value={totalMiles.toLocaleString()} icon={<MapPin className="h-4 w-4" />} />
         <KPI label="DH %" value={`${dhPercent.toFixed(1)}%`} icon={<Truck className="h-4 w-4" />} highlight={dhPercent > 15} />
       </div>
 
-      {/* Revenue Breakdown */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="pt-5 space-y-1">
-            <p className="text-sm text-muted-foreground">Dispatch Fees Earned</p>
-            <p className="text-2xl font-bold text-status-green">${totalDispatchFees.toLocaleString()}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-5 space-y-1">
-            <p className="text-sm text-muted-foreground">Total Driver Pay</p>
-            <p className="text-2xl font-bold">${totalDriverPay.toLocaleString()}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-5 space-y-1">
-            <p className="text-sm text-muted-foreground">Total Fuel Cost</p>
-            <p className="text-2xl font-bold">${totalFuel.toLocaleString()}</p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Revenue Breakdown — admin only */}
+      {isAdmin && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Card>
+            <CardContent className="pt-5 space-y-1">
+              <p className="text-sm text-muted-foreground">Dispatch Fees Earned</p>
+              <p className="text-2xl font-bold text-status-green">${totalDispatchFees.toLocaleString()}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-5 space-y-1">
+              <p className="text-sm text-muted-foreground">Total Driver Pay</p>
+              <p className="text-2xl font-bold">${totalDriverPay.toLocaleString()}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-5 space-y-1">
+              <p className="text-sm text-muted-foreground">Total Fuel Cost</p>
+              <p className="text-2xl font-bold">${totalFuel.toLocaleString()}</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Brokers */}
@@ -146,8 +152,8 @@ export function DispatchAnalytics({ loads }: Props) {
                 <TableRow>
                   <TableHead>Broker</TableHead>
                   <TableHead className="text-right">Loads</TableHead>
-                  <TableHead className="text-right">Revenue</TableHead>
-                  <TableHead className="text-right">RPM</TableHead>
+                  {isAdmin && <TableHead className="text-right">Revenue</TableHead>}
+                  {isAdmin && <TableHead className="text-right">RPM</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -155,8 +161,8 @@ export function DispatchAnalytics({ loads }: Props) {
                   <TableRow key={b.name}>
                     <TableCell className="font-medium">{b.name}</TableCell>
                     <TableCell className="text-right">{b.count}</TableCell>
-                    <TableCell className="text-right">${b.revenue.toLocaleString()}</TableCell>
-                    <TableCell className="text-right">${b.rpm.toFixed(2)}</TableCell>
+                    {isAdmin && <TableCell className="text-right">${b.revenue.toLocaleString()}</TableCell>}
+                    {isAdmin && <TableCell className="text-right">${b.rpm.toFixed(2)}</TableCell>}
                   </TableRow>
                 ))}
               </TableBody>
@@ -173,8 +179,8 @@ export function DispatchAnalytics({ loads }: Props) {
                 <TableRow>
                   <TableHead>Lane</TableHead>
                   <TableHead className="text-right">Loads</TableHead>
-                  <TableHead className="text-right">Revenue</TableHead>
-                  <TableHead className="text-right">Avg Rate</TableHead>
+                  {isAdmin && <TableHead className="text-right">Revenue</TableHead>}
+                  {isAdmin && <TableHead className="text-right">Avg Rate</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -182,8 +188,8 @@ export function DispatchAnalytics({ loads }: Props) {
                   <TableRow key={l.lane}>
                     <TableCell className="font-medium font-mono text-xs">{l.lane}</TableCell>
                     <TableCell className="text-right">{l.count}</TableCell>
-                    <TableCell className="text-right">${l.revenue.toLocaleString()}</TableCell>
-                    <TableCell className="text-right">${l.avgRate.toFixed(0)}</TableCell>
+                    {isAdmin && <TableCell className="text-right">${l.revenue.toLocaleString()}</TableCell>}
+                    {isAdmin && <TableCell className="text-right">${l.avgRate.toFixed(0)}</TableCell>}
                   </TableRow>
                 ))}
               </TableBody>
@@ -191,32 +197,34 @@ export function DispatchAnalytics({ loads }: Props) {
           </CardContent>
         </Card>
 
-        {/* By Client */}
-        <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-base">Revenue by Client</CardTitle></CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Client</TableHead>
-                  <TableHead className="text-right">Loads</TableHead>
-                  <TableHead className="text-right">Revenue</TableHead>
-                  <TableHead className="text-right">Fees Earned</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {clientStats.map((c) => (
-                  <TableRow key={c.name}>
-                    <TableCell className="font-medium">{c.name}</TableCell>
-                    <TableCell className="text-right">{c.count}</TableCell>
-                    <TableCell className="text-right">${c.revenue.toLocaleString()}</TableCell>
-                    <TableCell className="text-right text-status-green">${c.fees.toLocaleString()}</TableCell>
+        {/* By Client — admin only */}
+        {isAdmin && (
+          <Card>
+            <CardHeader className="pb-3"><CardTitle className="text-base">Revenue by Client</CardTitle></CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Client</TableHead>
+                    <TableHead className="text-right">Loads</TableHead>
+                    <TableHead className="text-right">Revenue</TableHead>
+                    <TableHead className="text-right">Fees Earned</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                </TableHeader>
+                <TableBody>
+                  {clientStats.map((c) => (
+                    <TableRow key={c.name}>
+                      <TableCell className="font-medium">{c.name}</TableCell>
+                      <TableCell className="text-right">{c.count}</TableCell>
+                      <TableCell className="text-right">${c.revenue.toLocaleString()}</TableCell>
+                      <TableCell className="text-right text-status-green">${c.fees.toLocaleString()}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Equipment & Freight */}
         <Card>
@@ -227,7 +235,7 @@ export function DispatchAnalytics({ loads }: Props) {
               {equipStats.map((e) => (
                 <div key={e.type} className="flex justify-between text-sm py-1 border-b last:border-0">
                   <span>{e.type}</span>
-                  <span className="text-muted-foreground">{e.count} loads · ${e.revenue.toLocaleString()} · avg ${e.avgRate.toFixed(0)}</span>
+                  <span className="text-muted-foreground">{e.count} loads{isAdmin ? ` · $${e.revenue.toLocaleString()} · avg $${e.avgRate.toFixed(0)}` : ''}</span>
                 </div>
               ))}
             </div>
@@ -236,7 +244,7 @@ export function DispatchAnalytics({ loads }: Props) {
               {freightStats.map((f) => (
                 <div key={f.type} className="flex justify-between text-sm py-1 border-b last:border-0">
                   <span>{f.type}</span>
-                  <span className="text-muted-foreground">{f.count} loads · ${f.revenue.toLocaleString()} · avg ${f.avgRate.toFixed(0)}</span>
+                  <span className="text-muted-foreground">{f.count} loads{isAdmin ? ` · $${f.revenue.toLocaleString()} · avg $${f.avgRate.toFixed(0)}` : ''}</span>
                 </div>
               ))}
             </div>
@@ -244,42 +252,44 @@ export function DispatchAnalytics({ loads }: Props) {
         </Card>
       </div>
 
-      {/* Most Profitable Loads */}
-      <Card>
-        <CardHeader className="pb-3"><CardTitle className="text-base">Most Profitable Loads</CardTitle></CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Load #</TableHead>
-                <TableHead>Route</TableHead>
-                <TableHead>Driver</TableHead>
-                <TableHead>Broker</TableHead>
-                <TableHead className="text-right">Rate</TableHead>
-                <TableHead className="text-right">Miles</TableHead>
-                <TableHead className="text-right">RPM</TableHead>
-                <TableHead className="text-right">Fee</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {topLoads.map((l) => (
-                <TableRow key={l.id}>
-                  <TableCell>
-                    <Link href={`/dispatch/loads/${l.id}`} className="font-mono text-sm font-medium hover:underline">{l.load_number}</Link>
-                  </TableCell>
-                  <TableCell className="text-xs">{l.origin_city}, {l.origin_state} → {l.destination_city}, {l.destination_state}</TableCell>
-                  <TableCell className="text-sm">{l.drivers?.full_name ?? '—'}</TableCell>
-                  <TableCell className="text-sm">{l.broker_name ?? '—'}</TableCell>
-                  <TableCell className="text-right font-medium">${Number(l.rate).toLocaleString()}</TableCell>
-                  <TableCell className="text-right">{l.miles?.toLocaleString() ?? '—'}</TableCell>
-                  <TableCell className="text-right">{l.rate_per_mile ? `$${Number(l.rate_per_mile).toFixed(2)}` : '—'}</TableCell>
-                  <TableCell className="text-right text-status-green">{l.dispatch_fee_amount ? `$${Number(l.dispatch_fee_amount).toFixed(0)}` : '—'}</TableCell>
+      {/* Most Profitable Loads — admin only */}
+      {isAdmin && (
+        <Card>
+          <CardHeader className="pb-3"><CardTitle className="text-base">Most Profitable Loads</CardTitle></CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Load #</TableHead>
+                  <TableHead>Route</TableHead>
+                  <TableHead>Driver</TableHead>
+                  <TableHead>Broker</TableHead>
+                  <TableHead className="text-right">Rate</TableHead>
+                  <TableHead className="text-right">Miles</TableHead>
+                  <TableHead className="text-right">RPM</TableHead>
+                  <TableHead className="text-right">Fee</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {topLoads.map((l) => (
+                  <TableRow key={l.id}>
+                    <TableCell>
+                      <Link href={`/dispatch/loads/${l.id}`} className="font-mono text-sm font-medium hover:underline">{l.load_number}</Link>
+                    </TableCell>
+                    <TableCell className="text-xs">{l.origin_city}, {l.origin_state} → {l.destination_city}, {l.destination_state}</TableCell>
+                    <TableCell className="text-sm">{l.drivers?.full_name ?? '—'}</TableCell>
+                    <TableCell className="text-sm">{l.broker_name ?? '—'}</TableCell>
+                    <TableCell className="text-right font-medium">${Number(l.rate).toLocaleString()}</TableCell>
+                    <TableCell className="text-right">{l.miles?.toLocaleString() ?? '—'}</TableCell>
+                    <TableCell className="text-right">{l.rate_per_mile ? `$${Number(l.rate_per_mile).toFixed(2)}` : '—'}</TableCell>
+                    <TableCell className="text-right text-status-green">{l.dispatch_fee_amount ? `$${Number(l.dispatch_fee_amount).toFixed(0)}` : '—'}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

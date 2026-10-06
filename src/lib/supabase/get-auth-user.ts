@@ -19,7 +19,7 @@ export async function getAuthUser(): Promise<AuthUser | null> {
     .eq('id', user.id)
     .single();
 
-  if (!profile) return null;
+  if (!profile || !profile.is_active) return null;
 
   let clientId: string | null = null;
   let assignedClientIds: string[] = [];

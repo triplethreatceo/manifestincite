@@ -1,4 +1,5 @@
 import type { AppRole } from './types/auth';
+import { getEnabledModules, type ModuleConfig } from '@/config/modules';
 
 export interface NavItem {
   label: string;
@@ -16,79 +17,65 @@ export interface NavGroup {
   items: NavItem[];
 }
 
-// Grouped admin/staff navigation — ordered by client-facing importance
-export const ADMIN_NAV_GROUPS: NavGroup[] = [
-  {
-    id: 'overview',
-    label: 'Overview',
-    icon: 'LayoutDashboard',
-    defaultExpanded: true,
-    items: [
-      { label: 'Dashboard',  href: '/dashboard',  icon: 'LayoutDashboard', roles: ['admin', 'staff'] },
-      { label: 'Analytics', href: '/dispatch/analytics', icon: 'BarChart3', roles: ['admin', 'staff'] },
-      { label: 'Calendar',   href: '/calendar',   icon: 'Calendar',        roles: ['admin', 'staff'] },
-    ],
-  },
-  {
-    id: 'clients',
-    label: 'Client Management',
-    icon: 'Building2',
-    defaultExpanded: true,
-    items: [
-      { label: 'Clients',   href: '/clients',   icon: 'Building2', roles: ['admin', 'staff'] },
-      { label: 'Drivers',   href: '/drivers',   icon: 'Users',     roles: ['admin', 'staff'] },
-      { label: 'Vehicles',  href: '/vehicles',  icon: 'Truck',     roles: ['admin', 'staff'] },
-    ],
-  },
-  {
-    id: 'dispatch',
-    label: 'Dispatch & Operations',
-    icon: 'MapPin',
-    defaultExpanded: true,
-    items: [
-      { label: 'Dispatch',  href: '/dispatch',          icon: 'MapPin',         roles: ['admin', 'staff'] },
-      { label: 'Loads',     href: '/dispatch/loads',    icon: 'Package',        roles: ['admin', 'staff'] },
-      { label: 'Messages',  href: '/dispatch/messages', icon: 'MessageSquare',  roles: ['admin', 'staff'] },
-    ],
-  },
-  {
-    id: 'compliance',
-    label: 'Compliance',
-    icon: 'ShieldCheck',
-    items: [
-      { label: 'Alerts',     href: '/alerts',     icon: 'AlertTriangle', roles: ['admin', 'staff'] },
-      { label: 'Documents',  href: '/documents',  icon: 'FileText',      roles: ['admin', 'staff'] },
-      { label: 'Tasks',      href: '/tasks',      icon: 'CheckSquare',   roles: ['admin', 'staff'] },
-    ],
-  },
-  {
-    id: 'verification',
-    label: 'Verification Network',
-    icon: 'BadgeCheck',
-    items: [
-      { label: 'Overview',    href: '/verification',            icon: 'BadgeCheck',  roles: ['admin', 'staff'] },
-      { label: 'Drivers',     href: '/verification/drivers',    icon: 'Users',       roles: ['admin', 'staff'] },
-      { label: 'Carriers',    href: '/verification/carriers',   icon: 'Building2',   roles: ['admin', 'staff'] },
-      { label: 'References',  href: '/verification/references', icon: 'FileText',    roles: ['admin', 'staff'] },
-    ],
-  },
-  {
-    id: 'revenue',
-    label: 'Revenue',
-    icon: 'Receipt',
-    items: [
-      { label: 'Invoices',  href: '/invoices',  icon: 'Receipt', roles: ['admin', 'staff'] },
-    ],
-  },
-  {
-    id: 'admin',
-    label: 'Administration',
-    icon: 'Settings',
-    items: [
-      { label: 'Settings',  href: '/settings',  icon: 'Settings', roles: ['admin'] },
-    ],
-  },
-];
+// Group icons (used as the collapsible section icon)
+const GROUP_ICONS: Record<string, string> = {
+  'Overview':               'LayoutDashboard',
+  'Client Management':      'Building2',
+  'Dispatch & Operations':  'MapPin',
+  'Compliance':             'ShieldCheck',
+  'Verification Network':   'BadgeCheck',
+  'Revenue':                'Receipt',
+  'Administration':         'Settings',
+};
+
+// Groups that start expanded by default
+const EXPANDED_GROUPS = new Set(['Overview', 'Client Management', 'Dispatch & Operations']);
+
+function modulesToGroups(modules: ModuleConfig[]): NavGroup[] {
+  const groupMap = new Map<string, NavItem[]>();
+  const groupOrder: string[] = [];
+
+  for (const mod of modules) {
+    if (!groupMap.has(mod.group)) {
+      groupMap.set(mod.group, []);
+      groupOrder.push(mod.group);
+    }
+    const roles: AppRole[] = mod.adminOnly ? ['admin'] : ['admin', 'staff'];
+    groupMap.get(mod.group)!.push({
+      label: mod.label,
+      href: mod.href,
+      icon: mod.icon,
+      roles,
+    });
+  }
+
+  return groupOrder.map((groupLabel) => ({
+    id: groupLabel.toLowerCase().replace(/[^a-z0-9]+/g, '_'),
+    label: groupLabel,
+    icon: GROUP_ICONS[groupLabel] ?? 'LayoutDashboard',
+    defaultExpanded: EXPANDED_GROUPS.has(groupLabel),
+    items: groupMap.get(groupLabel)!,
+  }));
+}
+
+/** Build nav groups for admin/staff from the enabled module config */
+export function getNavGroups(role: AppRole): NavGroup[] {
+  if (role === 'client') return CLIENT_NAV_GROUPS;
+  const modules = getEnabledModules(role as 'admin' | 'staff');
+  const groups = modulesToGroups(modules);
+  return groups
+    .map((g) => ({
+      ...g,
+      items: g.items.filter((item) => item.roles.includes(role)),
+    }))
+    .filter((g) => g.items.length > 0);
+}
+
+export function getNavItems(role: AppRole): NavItem[] {
+  return getNavGroups(role).flatMap((g) => g.items);
+}
+
+// ── Client portal nav (not affected by module flags) ──
 
 export const CLIENT_NAV_GROUPS: NavGroup[] = [
   {
@@ -121,22 +108,3 @@ export const CLIENT_NAV_GROUPS: NavGroup[] = [
     ],
   },
 ];
-
-// Flat list helpers (for mobile nav and backwards compat)
-export const ADMIN_NAV: NavItem[] = ADMIN_NAV_GROUPS.flatMap((g) => g.items);
-export const CLIENT_NAV: NavItem[] = CLIENT_NAV_GROUPS.flatMap((g) => g.items);
-
-export function getNavItems(role: AppRole): NavItem[] {
-  if (role === 'client') return CLIENT_NAV;
-  return ADMIN_NAV.filter((item) => item.roles.includes(role));
-}
-
-export function getNavGroups(role: AppRole): NavGroup[] {
-  const groups = role === 'client' ? CLIENT_NAV_GROUPS : ADMIN_NAV_GROUPS;
-  return groups
-    .map((g) => ({
-      ...g,
-      items: g.items.filter((item) => item.roles.includes(role)),
-    }))
-    .filter((g) => g.items.length > 0);
-}

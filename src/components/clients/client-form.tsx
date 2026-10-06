@@ -19,11 +19,15 @@ import {
 import { toast } from 'sonner';
 import type { DbClient } from '@/lib/types/database';
 
+import type { AppRole } from '@/lib/types/auth';
+
 interface ClientFormProps {
   client?: DbClient;
+  userRole?: AppRole;
 }
 
-export function ClientForm({ client }: ClientFormProps) {
+export function ClientForm({ client, userRole = 'admin' }: ClientFormProps) {
+  const isAdmin = userRole === 'admin';
   const router = useRouter();
   const isEditing = !!client;
 
@@ -172,16 +176,18 @@ export function ClientForm({ client }: ClientFormProps) {
 
           {/* Billing */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="monthly_service_fee">Monthly Service Fee</Label>
-              <Input
-                id="monthly_service_fee"
-                type="number"
-                step="0.01"
-                min="0"
-                {...form.register('monthly_service_fee')}
-              />
-            </div>
+            {isAdmin && (
+              <div className="space-y-2">
+                <Label htmlFor="monthly_service_fee">Monthly Service Fee</Label>
+                <Input
+                  id="monthly_service_fee"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  {...form.register('monthly_service_fee')}
+                />
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="white_label_partner">White-Label Partner</Label>
               <Input id="white_label_partner" {...form.register('white_label_partner')} />

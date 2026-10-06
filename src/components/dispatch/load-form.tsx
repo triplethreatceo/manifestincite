@@ -10,11 +10,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 
+import type { AppRole } from '@/lib/types/auth';
+
 interface Props {
   clients: { id: string; company_legal_name: string }[];
   drivers: { id: string; full_name: string; client_id: string }[];
   vehicles: { id: string; unit_number: string; make: string; model: string; client_id: string }[];
   userId: string;
+  userRole: AppRole;
   load?: any;
 }
 
@@ -29,7 +32,8 @@ const FREIGHT_TYPES = [
   'Agricultural', 'Livestock', 'Intermodal', 'LTL', 'Other',
 ];
 
-export function LoadForm({ clients, drivers, vehicles, userId, load }: Props) {
+export function LoadForm({ clients, drivers, vehicles, userId, userRole, load }: Props) {
+  const isAdmin = userRole === 'admin';
   const router = useRouter();
   const isEditing = !!load;
 
@@ -223,28 +227,30 @@ export function LoadForm({ clients, drivers, vehicles, userId, load }: Props) {
         </CardContent>
       </Card>
 
-      {/* Rate & Financials */}
+      {/* Rate & Financials — operational fields always visible, financial fields admin-only */}
       <Card>
-        <CardHeader><CardTitle className="text-base">Rate & Financials</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{isAdmin ? 'Rate & Financials' : 'Load Details'}</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="space-y-2"><Label>Rate ($)</Label><Input type="number" step="0.01" {...form.register('rate')} /></div>
+            {isAdmin && <div className="space-y-2"><Label>Rate ($)</Label><Input type="number" step="0.01" {...form.register('rate')} /></div>}
             <div className="space-y-2"><Label>Miles</Label><Input type="number" {...form.register('miles')} /></div>
             <div className="space-y-2"><Label>Deadhead (DH)</Label><Input type="number" {...form.register('deadhead_miles')} /></div>
             <div className="space-y-2"><Label>Weight (lbs)</Label><Input type="number" {...form.register('weight')} /></div>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label>RPM</Label>
-              <div className="flex h-9 items-center rounded-md border bg-muted px-3 text-sm font-medium">{rpm}</div>
+          {isAdmin && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <Label>RPM</Label>
+                <div className="flex h-9 items-center rounded-md border bg-muted px-3 text-sm font-medium">{rpm}</div>
+              </div>
+              <div className="space-y-2"><Label>Dispatch Fee %</Label><Input type="number" step="0.01" {...form.register('dispatch_fee_percent')} /></div>
+              <div className="space-y-2">
+                <Label>Dispatch Fee ($)</Label>
+                <div className="flex h-9 items-center rounded-md border bg-muted px-3 text-sm font-medium">{dispatchFee}</div>
+              </div>
+              <div className="space-y-2"><Label>Driver Pay ($)</Label><Input type="number" step="0.01" {...form.register('driver_pay')} /></div>
             </div>
-            <div className="space-y-2"><Label>Dispatch Fee %</Label><Input type="number" step="0.01" {...form.register('dispatch_fee_percent')} /></div>
-            <div className="space-y-2">
-              <Label>Dispatch Fee ($)</Label>
-              <div className="flex h-9 items-center rounded-md border bg-muted px-3 text-sm font-medium">{dispatchFee}</div>
-            </div>
-            <div className="space-y-2"><Label>Driver Pay ($)</Label><Input type="number" step="0.01" {...form.register('driver_pay')} /></div>
-          </div>
+          )}
         </CardContent>
       </Card>
 

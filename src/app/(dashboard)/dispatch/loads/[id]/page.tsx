@@ -1,6 +1,7 @@
 import { redirect, notFound } from 'next/navigation';
 import { getAuthUser } from '@/lib/supabase/get-auth-user';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { stripFinancialFields } from '@/lib/financial-fields';
 import { LoadDetail } from '@/components/dispatch/load-detail';
 
 export default async function LoadDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -37,13 +38,16 @@ export default async function LoadDetailPage({ params }: { params: Promise<{ id:
       .order('created_at', { ascending: true }),
   ]);
 
+  const safeLoad = user.role === 'admin' ? load : stripFinancialFields(load);
+
   return (
     <LoadDetail
-      load={load}
+      load={safeLoad}
       statusUpdates={statusUpdates ?? []}
       documents={documents ?? []}
       messages={messages ?? []}
       userId={user.id}
+      userRole={user.role}
     />
   );
 }
