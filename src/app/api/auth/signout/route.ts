@@ -9,5 +9,8 @@ export async function POST() {
   const headersList = await headers();
   const host = headersList.get('host') ?? 'localhost:3000';
   const protocol = host.startsWith('localhost') ? 'http' : 'https';
-  return NextResponse.redirect(new URL('/login', `${protocol}://${host}`));
+  const loginUrl = new URL('/login', `${protocol}://${host}`);
+
+  // Use 303 See Other to force GET redirect after POST
+  return NextResponse.redirect(loginUrl, 303);
 }
